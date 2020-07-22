@@ -1,0 +1,96 @@
+import pandas as pd
+import numpy as np
+
+df = pd.DataFrame()
+prob = np.array([])
+prob2 = np.array([])
+prob3 = np.array([])
+list = []
+diccionario = {}
+
+
+a = 0
+z = int(input('num de columnas'))
+p = int(input('num de filas: '))
+prueba = z
+
+while a < z:
+    g = input('nombre de la columna: ')
+    x = []
+    for i in range(p):
+        y = int(input('num: '))
+        x.append(y)    
+    df[g]= x    
+#agregar probabilidades 1
+    x = float(input('prob de ese futuro: '))
+    prob = np.append(prob, x)
+#agregar probabilidades 2
+    x = float(input('prob imperfectas de ese futuro: '))
+    prob2 = np.append(prob2, x)
+#agregar el loop para que reste y arme la matriz
+    x = 1
+    prob3 = np.append(prob3, x)
+    a +=1
+
+#criterio optimista
+maxi = df.max(axis=1).sort_values(ascending=False)
+maxi_id = maxi.idxmax()
+maxi = maxi.max()
+diccionario['Optimista']=maxi_id,maxi
+
+#criterio pesimista
+pesi = df.min(axis=1).sort_values(ascending=False)
+pesi_id = pesi.idxmax()
+pesi = pesi.max()
+diccionario['Pesimista']=pesi_id,pesi
+
+#matriz de arrepentimiento
+arrepentimiento = (df-(df.max(axis=0).to_numpy())).min(axis=1).sort_values(ascending=False)*-1 
+arrepentimiento_id = arrepentimiento.idxmin()
+arrepentimiento = arrepentimiento.min()
+diccionario['Savage']=arrepentimiento_id, arrepentimiento
+
+#matriz de laplace
+laplace = df.sum(axis=1)/2
+laplace_id = laplace.idxmax()
+laplace = laplace.max()
+diccionario['Laplace']=laplace_id,laplace
+
+#ganancia esperada
+ge = (df*prob).sum(axis=1).max()
+diccionario['Ganancia esperada']=ge
+
+#ganancia  con info perfecta
+geip = (df.max()*prob).sum() 
+diccionario['Ganancia esperada con info perfecta']=geip
+
+#Valor a pagar por informacion perfecta
+veip = geip - ge
+diccionario['Valor a pagar por info perfecta']=veip
+
+#ganancia con info imperfecta
+#crear un df con prob2
+#multiplicar prob1 y df prob2
+prob4 = (np.vstack((prob2,(prob3-prob2))))*prob
+
+#sumar filas
+prob5 = prob4.sum(axis=1)
+
+#dividir por el total 
+prob6 = prob4 /prob5[:, np.newaxis] 
+prob6 = np.split(prob6, prueba)
+
+#multiplicar cada fila por los valores de la df principal y sumar los valores
+prob5 = np.split(prob5, prueba)
+for i in range(prueba):
+    prob7 = (prob6[i]*df).sum(axis=1).max()*prob5[i]
+#multiplicarlos por los valores totales
+    list.append(prob7)
+
+geii = sum(list)
+diccionario['Ganancia esperada por info imperfecta']=geii
+
+#valor a pagar por informacion imperfecta
+veii = geii-ge
+diccionario['Valor a pagar por info imperfecta']=veii
+print(diccionario)
